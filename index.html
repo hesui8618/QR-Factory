@@ -129,6 +129,79 @@
             margin-bottom: 25px;
         }
         
+        /* 可折叠部分样式 */
+        .collapsible-section {
+            /* 移除外边框 */
+            /* border: 1px solid var(--border-color); */
+            border-radius: var(--border-radius-small);
+            margin-bottom: 25px; /* 与其他 input-group 保持一致的底部间距 */
+            overflow: hidden;
+        }
+
+        .collapsible-header {
+            padding: 14px 18px;
+            background-color: var(--background-color);
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            /* 添加边框到标题 */
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-small); /* 与 section 保持一致的圆角 */
+            margin-bottom: 25px; /* 将底部间距移到标题 */
+            transition: background-color 0.3s;
+        }
+
+        .collapsible-header:hover {
+            background-color: #f0f0f0;
+        }
+
+        .collapsible-header.active {
+            /* 移除激活状态下底部边框的特殊处理，因为现在标题本身有边框 */
+            /* border-bottom-color: transparent; */
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            border-bottom-color: transparent;
+        }
+
+        .collapsible-content {
+            padding: 18px;
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            border-bottom-left-radius: var(--border-radius-small);
+            border-bottom-right-radius: var(--border-radius-small);
+            margin-top: -25px; /* 向上移动，以填补标题的 margin-bottom */
+            position: relative; /* 确保 z-index 正常工作 */
+            z-index: 1; /* 确保内容在标题下方 */
+        }
+
+        .collapsible-content.active {
+            max-height: 500px; /* 足够大的高度以显示内容 */
+            opacity: 1;
+        }
+
+        .collapsible-content .input-group {
+            margin-bottom: 15px; /* 可折叠内容内部的 input-group 间距 */
+        }
+
+        .collapsible-content .input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .arrow-icon {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .collapsible-header.active .arrow-icon {
+            transform: rotate(180deg);
+        }
+        
         label {
             display: block;
             margin-bottom: 10px;
@@ -241,17 +314,18 @@
             border-radius: var(--border-radius-large);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
             width: 100%;
-            max-width: 290px;
-            height: 290px;
+            max-width: 450px;
+            height: 450px;
             display: flex;
             justify-content: center;
             align-items: center;
             transition: transform 0.3s;
         }
 
-        .qrcode-container:has(canvas) {
+        /* 移除二维码容器的缩放效果，以确保与按钮对齐 */
+        /* .qrcode-container:has(canvas) {
             transform: scale(1.03);
-        }
+        } */
         
         .qrcode-message {
             text-align: center;
@@ -362,6 +436,26 @@
             .button-group {
                 grid-template-columns: 1fr;
             }
+            
+            .qrcode-container {
+                max-width: calc(100% - 40px); /* 100% 减去左右各20px的容器padding */
+                height: auto; /* 高度自适应 */
+                padding: 15px; /* 减小内边距 */
+            }
+
+            .preview-section .button-group {
+                max-width: calc(100% - 40px); /* 与二维码容器外部宽度对齐 */
+                margin-top: 20px; /* 调整与二维码的间距 */
+            }
+
+            .collapsible-header,
+            .collapsible-content {
+                padding: 12px 15px; /* 调整折叠标题和内容的内边距 */
+            }
+
+            .collapsible-content .input-group {
+                margin-bottom: 10px;
+            }
         }
         
         .language-switcher {
@@ -386,6 +480,14 @@
             color: var(--primary-color);
             background-color: rgba(0, 122, 255, 0.05);
         }
+
+        .preview-section .button-group {
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
     </style>
 </head>
 <body>
@@ -409,11 +511,26 @@
                 <div class="input-section">
                     <!-- 文本二维码 -->
                     <div class="tab-content active" id="text-content">
+                        <div class="collapsible-section">
+                            <div class="collapsible-header active" data-i18n="textHeader">
+                                <!-- 占位符，由JS填充 -->
+                                <span class="arrow-icon">&#9660;</span>
+                            </div>
+                            <div class="collapsible-content active">
+                                <div class="input-group">
+                                    <textarea id="text-input" rows="6" placeholder="请输入需要转换成二维码的文本内容..." data-i18n-placeholder="textPlaceholder" maxlength="1000"></textarea>
+                                    <p class="error" id="text-error" data-i18n="textError">请输入有效的文本内容</p>
+                                    <p><span id="text-counter">0</span>/1000 <span data-i18n="textCounterUnit">字符</span></p>
+                                </div>
+                            </div>
+                        </div>
                         <div class="input-group">
-                            <label for="text-input" data-i18n="textLabel">文本内容</label>
-                            <textarea id="text-input" rows="6" placeholder="请输入需要转换成二维码的文本内容..." data-i18n-placeholder="textPlaceholder" maxlength="1000"></textarea>
-                            <p class="error" id="text-error" data-i18n="textError">请输入有效的文本内容</p>
-                            <p><span id="text-counter">0</span>/1000 <span data-i18n="textCounterUnit">字符</span></p>
+                            <label for="foreground-color" data-i18n="foregroundColorLabel">前景色</label>
+                            <input type="color" id="foreground-color" value="#000000">
+                        </div>
+                        <div class="input-group">
+                            <label for="background-color" data-i18n="backgroundColorLabel">背景色</label>
+                            <input type="color" id="background-color" value="#FFFFFF">
                         </div>
                     </div>
                     
@@ -459,11 +576,6 @@
                         </div>
                     </div>
                     
-                    <div class="button-group">
-                        <button class="generate-btn" id="generate-btn" data-i18n="generateBtn">生成二维码</button>
-                        <button class="download-btn" id="download-btn" disabled data-i18n="downloadBtn">下载</button>
-                        <button class="clear-btn" id="clear-btn" data-i18n="clearBtn">清空</button>
-                    </div>
                 </div>
                 
                 <div class="preview-section">
@@ -471,6 +583,11 @@
                     <div class="qrcode-container">
                         <div id="qrcode"></div>
                         <p class="qrcode-message" id="qrcode-message" data-i18n="previewMessageDefault">在左侧输入内容后点击生成按钮</p>
+                    </div>
+                    <div class="button-group">
+                        <button class="generate-btn" id="generate-btn" data-i18n="generateBtn">生成二维码</button>
+                        <button class="download-btn" id="download-btn" disabled data-i18n="downloadBtn">下载</button>
+                        <button class="clear-btn" id="clear-btn" data-i18n="clearBtn">清空</button>
                     </div>
                 </div>
             </div>
@@ -520,12 +637,15 @@
                     tabText: '文本二维码',
                     tabUrl: '网址二维码',
                     tabVcard: '联系人二维码',
+                    textHeader: '输入文字',
                     textLabel: '文本内容',
                     textPlaceholder: '请输入需要转换成二维码的文本内容...',
                     textError: '请输入有效的文本内容',
                     textCounterUnit: '字符',
                     urlLabel: '网址链接',
                     urlPlaceholder: '请输入需要转换成二维码的网址...',
+                    foregroundColorLabel: '前景色',
+                    backgroundColorLabel: '背景色',
                     urlError: '请输入有效的网址',
                     autoPrefixLabel: '自动添加 http:// 前缀（如果缺少）',
                     vcardNameLabel: '姓名',
@@ -573,12 +693,15 @@
                     tabText: 'Text',
                     tabUrl: 'URL',
                     tabVcard: 'vCard',
+                    textHeader: 'Text Content',
                     textLabel: 'Text Content',
                     textPlaceholder: 'Enter text to convert to QR code...',
                     textError: 'Please enter valid text content',
                     textCounterUnit: 'characters',
                     urlLabel: 'Website URL',
                     urlPlaceholder: 'Enter URL to convert to QR code...',
+                    foregroundColorLabel: 'Foreground Color',
+                    backgroundColorLabel: 'Background Color',
                     urlError: 'Please enter a valid URL',
                     autoPrefixLabel: 'Auto-add http:// prefix (if missing)',
                     vcardNameLabel: 'Name',
@@ -669,6 +792,20 @@
             const qrcodeMessage = document.getElementById('qrcode-message');
             const textCounter = document.getElementById('text-counter');
             
+            // 获取颜色输入框
+            const foregroundColorInput = document.getElementById('foreground-color');
+            const backgroundColorInput = document.getElementById('background-color');
+
+            // 获取可折叠元素
+            const collapsibleHeader = document.querySelector('#text-content .collapsible-header');
+            const collapsibleContent = document.querySelector('#text-content .collapsible-content');
+
+            // 可折叠标题点击事件
+            collapsibleHeader.addEventListener('click', function() {
+                this.classList.toggle('active');
+                collapsibleContent.classList.toggle('active');
+            });
+            
             // 语言切换功能
             function setLanguage(lang) {
                 if (!translations[lang]) return;
@@ -713,6 +850,10 @@
                 element.addEventListener('input', debounce(generateQRCode, 500));
             });
             autoPrefix.addEventListener('change', debounce(generateQRCode, 500));
+            
+            // 颜色输入框事件监听
+            foregroundColorInput.addEventListener('input', debounce(generateQRCode, 500));
+            backgroundColorInput.addEventListener('input', debounce(generateQRCode, 500));
             
             // 生成按钮点击事件
             generateBtn.addEventListener('click', generateQRCode);
@@ -812,9 +953,13 @@
                         
                         // 使用qrcode.js的toCanvas方法
                         QRCode.toCanvas(canvas, content, {
-                            width: 240,
+                            width: 400,
                             margin: 1,
-                            errorCorrectionLevel: 'M'
+                            errorCorrectionLevel: 'M',
+                            color: {
+                                dark: foregroundColorInput.value,  // 前景色
+                                light: backgroundColorInput.value // 背景色
+                            }
                         }, function(error) {
                             if (error) {
                                 console.error('二维码生成错误:', error);
